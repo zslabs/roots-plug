@@ -6,7 +6,7 @@ Plugin URI: http://zslabs.com
 Description: Roots Plug is the catch-all awesome WordPress plugin that cleans up default output, uses relative URLs and provides all those handy-dandy functions that we all search for around the web - in one convenient package! Largely based and inspired by the Roots Theme by Ben Word.
 Author: Zach Schnackel
 Author URI: http://zslabs.com
-Version: 0.5
+Version: 0.6
 */
 
 /*-----------------------------------------------------------------------------------*/
