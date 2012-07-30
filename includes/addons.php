@@ -46,14 +46,6 @@ function of_post_thumbnail_feeds($content) {
 add_filter('the_excerpt_rss', 'of_post_thumbnail_feeds');
 add_filter('the_content_feed', 'of_post_thumbnail_feeds');
 
-/* Add Favicon
-function of_favicon() {
-	if (file_exists(''.get_bloginfo('stylesheet_directory').'/img/favicon.png')) { ?>
-		<link rel="shortcut icon" href="<?php echo get_stylesheet_directory_uri(); ?>/img/favicon.png" />
-	<?php }
-}
-add_action('wp_head', 'of_favicon');*/
-
 // Force browser referers to post comments
 function verify_comment_referer() {
 	if (!wp_get_referer()) {
@@ -94,10 +86,3 @@ function spam_delete_comment_link($id) {
 }
 
 add_filter('edit_comment_link', 'spam_delete_comment_link');
-
-// Allows for the check of the current post type
-function is_post_type($type){
-    global $wp_query;
-    if($type == get_post_type($wp_query->post->ID)) return true;
-    return false;
-}
