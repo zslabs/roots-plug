@@ -6,7 +6,7 @@ Plugin URI: http://zslabs.com
 Description: Roots Plug is the catch-all awesome WordPress plugin that cleans up default output, uses relative URLs and provides all those handy-dandy functions that we all search for around the web - in one convenient package! Largely based and inspired by the Roots Theme by Ben Word.
 Author: Zach Schnackel
 Author URI: http://zslabs.com
-Version: 0.2
+Version: 0.5
 */
 
 /*-----------------------------------------------------------------------------------*/
@@ -35,7 +35,7 @@ if(!defined('RPLUG_PLUGIN_FILE')) {
 $rplug_options = get_option('rplug_settings');*/
 include_once(RPLUG_PLUGIN_DIR . 'includes/install.php'); // Sets default plugin settings on activation
 
-include_once(RPLUG_PLUGIN_DIR . 'includes/roots-utils.php');       // utility functions
+include_once(RPLUG_PLUGIN_DIR . 'includes/util.php');       // utility functions
 
 /*-----------------------------------------------------------------------------------*/
 /*	ROOTS STUFF
@@ -48,12 +48,12 @@ define('FULL_RELATIVE_PLUGIN_PATH', WP_BASE . '/' . RELATIVE_PLUGIN_PATH);
 define('RELATIVE_CONTENT_PATH', str_replace(site_url() . '/', '', content_url()));
 define('THEME_PATH', RELATIVE_CONTENT_PATH . '/themes/' . THEME_NAME);
 
-include_once(RPLUG_PLUGIN_DIR . 'includes/roots-cleanup.php'); 			// cleanup
-include_once(RPLUG_PLUGIN_DIR . 'includes/roots-htaccess.php'); 			 // rewrites for assets, h5bp htaccess
+include_once(RPLUG_PLUGIN_DIR . 'includes/cleanup.php'); 			// cleanup
+include_once(RPLUG_PLUGIN_DIR . 'includes/htaccess.php'); 			 // rewrites for assets, h5bp htaccess
 
 /*-----------------------------------------------------------------------------------*/
 /*	INCLUDES (CONT) BACK TO BUSINESS
 /*-----------------------------------------------------------------------------------*/
 
-include_once(RPLUG_PLUGIN_DIR . 'includes/rplug-addons.php'); // additions
+include_once(RPLUG_PLUGIN_DIR . 'includes/addons.php'); // additions
 /*include_once(RPLUG_PLUGIN_DIR . 'includes/plugin-settings.php'); // Plugin options page HTML/Save functions*/

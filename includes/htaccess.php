@@ -1,21 +1,8 @@
 <?php
-/**
- * URL rewriting and addition of HTML5 Boilerplate's .htaccess
- *
- * Rewrites currently do not happen for child themes (or network installs)
- * @todo https://github.com/retlehs/roots/issues/461
- *
- * Rewrite:
- *   /wp-content/themes/themename/css/ to /css/
- *   /wp-content/themes/themename/js/  to /js/
- *   /wp-content/themes/themename/img/ to /img/
- *   /wp-content/plugins/              to /plugins/
- *
- * If you aren't using Apache, alternate configuration settings can be found in the wiki.
- *
- * @link https://github.com/retlehs/roots/wiki/Nginx
- * @link https://github.com/retlehs/roots/wiki/Lighttpd
- */
+
+// Using a server other than Apache? See:
+// https://github.com/retlehs/roots/wiki/Nginx
+// https://github.com/retlehs/roots/wiki/Lighttpd
 
 if (stristr($_SERVER['SERVER_SOFTWARE'], 'apache') || stristr($_SERVER['SERVER_SOFTWARE'], 'litespeed') !== false)  {
 
@@ -32,6 +19,12 @@ if (stristr($_SERVER['SERVER_SOFTWARE'], 'apache') || stristr($_SERVER['SERVER_S
   add_action( 'after_setup_theme', 'wpse_50359_set_plugin_basics');
 
   function wpse_50359_set_plugin_basics() {
+
+    // Rewrites DO NOT happen for child themes
+    // rewrite /wp-content/themes/roots/css/ to /css/
+    // rewrite /wp-content/themes/roots/js/  to /js/
+    // rewrite /wp-content/themes/roots/img/ to /js/
+    // rewrite /wp-content/plugins/ to /plugins/
 
     function roots_add_rewrites($content) {
       global $wp_rewrite;
@@ -71,7 +64,7 @@ if (stristr($_SERVER['SERVER_SOFTWARE'], 'apache') || stristr($_SERVER['SERVER_S
       }
     }
 
-  // Add the contents of h5bp-htaccess into the .htaccess file
+      // add the contents of h5bp-htaccess into the .htaccess file
     function roots_add_h5bp_htaccess($content) {
       global $wp_rewrite;
       $home_path = function_exists('get_home_path') ? get_home_path() : ABSPATH;

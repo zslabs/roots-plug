@@ -3,7 +3,7 @@ Contributors: zslabs
 Tags: roots, cleanup
 Requires at least: 3.3
 Tested up to: 3.3.2
-Stable tag: 0.2
+Stable tag: 0.5
 License: GPLv2
 
 Catch-all awesomeness for a leaner, meaner WordPress site. Based off of the Roots Theme by Ben Word.
@@ -33,6 +33,19 @@ Please see the [Roots Wiki](https://github.com/retlehs/roots/wiki/Roots-function
 Sure! I'm always open to knew ideas. Just create a new forum post and I'll take a gander.
 
 == Changelog ==
+
+= 0.6 =
+* .htaccess updates
+* We're on Github now! https://github.com/zslabs/roots-plug/
+
+= 0.5 =
+* Removed Roots Nav Walker (do this on the theme level instead)
+
+= 0.4 =
+* Roots cleanup updates
+
+= 0.3 =
+* HTML5 Boilerplate .htaccess updates
 
 = 0.2 =
 * HTML5 Boilerplate .htaccess updates

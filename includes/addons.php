@@ -46,6 +46,14 @@ function of_post_thumbnail_feeds($content) {
 add_filter('the_excerpt_rss', 'of_post_thumbnail_feeds');
 add_filter('the_content_feed', 'of_post_thumbnail_feeds');
 
+/* Add Favicon
+function of_favicon() {
+	if (file_exists(''.get_bloginfo('stylesheet_directory').'/img/favicon.png')) { ?>
+		<link rel="shortcut icon" href="<?php echo get_stylesheet_directory_uri(); ?>/img/favicon.png" />
+	<?php }
+}
+add_action('wp_head', 'of_favicon');*/
+
 // Force browser referers to post comments
 function verify_comment_referer() {
 	if (!wp_get_referer()) {
