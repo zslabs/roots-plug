@@ -1,49 +1,99 @@
 <?php
 
 /**
- * Redirects search results from /?s=query to /search/query/, converts %20 to +
+ * Clean up wp_head()
  *
- * @link http://txfx.net/wordpress-plugins/nice-search/
+ * Remove unnecessary <link>'s
+ * Remove inline CSS used by Recent Comments widget
+ * Remove inline CSS used by posts with galleries
+ * Remove self-closing tag and change ''s to "'s on rel_canonical()
  */
-function roots_nice_search_redirect() {
-  if (is_search() && strpos($_SERVER['REQUEST_URI'], '/wp-admin/') === false && strpos($_SERVER['REQUEST_URI'], '/search/') === false) {
-	wp_redirect(home_url('/search/' . str_replace(array(' ', '%20'), array('+', '+'), urlencode(get_query_var( 's' )))), 301);
-	  exit();
+function roots_head_cleanup() {
+  // Originally from http://wpengineer.com/1438/wordpress-header/
+  remove_action('wp_head', 'feed_links', 2);
+  remove_action('wp_head', 'feed_links_extra', 3);
+  remove_action('wp_head', 'rsd_link');
+  remove_action('wp_head', 'wlwmanifest_link');
+  remove_action('wp_head', 'adjacent_posts_rel_link_wp_head', 10, 0);
+  remove_action('wp_head', 'wp_generator');
+  remove_action('wp_head', 'wp_shortlink_wp_head', 10, 0);
+
+  global $wp_widget_factory;
+  remove_action('wp_head', array($wp_widget_factory->widgets['WP_Widget_Recent_Comments'], 'recent_comments_style'));
+
+  add_filter('use_default_gallery_style', '__return_null');
+
+  if (!class_exists('WPSEO_Frontend')) {
+    remove_action('wp_head', 'rel_canonical');
+    add_action('wp_head', 'roots_rel_canonical');
   }
 }
 
-add_action('template_redirect', 'roots_nice_search_redirect');
+function roots_rel_canonical() {
+  global $wp_the_query;
+
+  if (!is_singular()) {
+    return;
+  }
+
+  if (!$id = $wp_the_query->get_queried_object_id()) {
+    return;
+  }
+
+  $link = get_permalink($id);
+  echo "\t<link rel=\"canonical\" href=\"$link\">\n";
+}
+
+add_action('init', 'roots_head_cleanup');
 
 /**
- * Fix for get_search_query() returning +'s between search terms
+ * Remove the WordPress version from RSS feeds
  */
-function roots_search_query($escaped = true) {
-  $query = apply_filters('roots_search_query', get_query_var('s'));
-
-  if ($escaped) {
-	  $query = esc_attr($query);
-  }
-
-  return urldecode($query);
-}
-
-add_filter('get_search_query', 'roots_search_query');
+add_filter('the_generator', '__return_false');
 
 /**
- * Fix for empty search queries redirecting to home page
+ * Clean up language_attributes() used in <html> tag
  *
- * @link http://wordpress.org/support/topic/blank-search-sends-you-to-the-homepage#post-1772565
- * @link http://core.trac.wordpress.org/ticket/11330
+ * Change lang="en-US" to lang="en"
+ * Remove dir="ltr"
  */
-function roots_request_filter($query_vars) {
-  if (isset($_GET['s']) && empty($_GET['s'])) {
-    $query_vars['s'] = ' ';
+function roots_language_attributes() {
+  $attributes = array();
+  $output = '';
+
+  if (function_exists('is_rtl')) {
+    if (is_rtl() == 'rtl') {
+      $attributes[] = 'dir="rtl"';
+    }
   }
 
-  return $query_vars;
+  $lang = get_bloginfo('language');
+
+  if ($lang && $lang !== 'en-US') {
+    $attributes[] = "lang=\"$lang\"";
+  } else {
+    $attributes[] = 'lang="en"';
+  }
+
+  $output = implode(' ', $attributes);
+  $output = apply_filters('roots_language_attributes', $output);
+
+  return $output;
+  }
+
+add_filter('language_attributes', 'roots_language_attributes');
+
+/**
+ * Clean up output of stylesheet <link> tags
+ */
+function roots_clean_style_tag($input) {
+  preg_match_all("!<link rel='stylesheet'\s?(id='[^']+')?\s+href='(.*)' type='text/css' media='(.*)' />!", $input, $matches);
+  // Only display media if it's print
+  $media = $matches[3][0] === 'print' ? ' media="print"' : '';
+  return '<link rel="stylesheet" href="' . $matches[2][0] . '"' . $media . '>' . "\n";
 }
 
-add_filter('request', 'roots_request_filter');
+add_filter('style_loader_tag', 'roots_clean_style_tag');
 
 /**
  * Root relative URLs
@@ -61,8 +111,8 @@ function roots_root_relative_url($input) {
 		'!(https?://[^/|"]+)([^"]+)?!',
 		create_function(
 			'$matches',
-      // If full URL is home_url("/"), return a slash for relative root
-      'if (isset($matches[0]) && $matches[0] === home_url("/")) { return "/";' .
+      // If full URL is home_url("/") and this isn't a subdir install, return a slash for relative root
+      'if (isset($matches[0]) && $matches[0] === home_url("/") && str_replace("http://", "", home_url("/", "http"))==$_SERVER["HTTP_HOST"]) { return "/";' .
       // If domain is equal to home_url("/"), then make URL relative
       '} elseif (isset($matches[0]) && strpos($matches[0], home_url("/")) !== false) { return $matches[2];' .
       // If domain is not equal to home_url("/"), do not make external link relative
@@ -91,11 +141,11 @@ function roots_fix_duplicate_subfolder_urls($input) {
   return $output;
 }
 
-function enable_root_relative_urls() {
+function roots_enable_root_relative_urls() {
   return !(is_admin() && in_array($GLOBALS['pagenow'], array('wp-login.php', 'wp-register.php')));
 }
 
-if (enable_root_relative_urls()) {
+if (roots_enable_root_relative_urls()) {
   $root_rel_filters = array(
     'bloginfo_url',
     'theme_root_uri',
@@ -124,102 +174,68 @@ if (enable_root_relative_urls()) {
 }
 
 /**
- * Cleanup language_attributes() used in <html> tag
+ * Wrap embedded media as suggested by Readability
  *
- * Change lang="en-US" to lang="en"
- * Remove dir="ltr"
+ * @link https://gist.github.com/965956
+ * @link http://www.readability.com/publishers/guidelines#publisher
  */
-function roots_language_attributes() {
-  $attributes = array();
-  $output = '';
+function roots_embed_wrap($cache, $url, $attr = '', $post_ID = '') {
+  return '<div class="entry-content-asset">' . $cache . '</div>';
+  }
 
-  if (function_exists('is_rtl')) {
-	if (is_rtl() == 'rtl') {
-	  $attributes[] = 'dir="rtl"';
+add_filter('embed_oembed_html', 'roots_embed_wrap', 10, 4);
+add_filter('embed_googlevideo', 'roots_embed_wrap', 10, 2);
+
+/**
+ * Add class="thumbnail" to attachment items
+ */
+function roots_attachment_link_class($html) {
+  $postid = get_the_ID();
+  $html = str_replace('<a', '<a class="thumbnail"', $html);
+  return $html;
+}
+
+add_filter('wp_get_attachment_link', 'roots_attachment_link_class', 10, 1);
+
+/**
+ * Add Bootstrap thumbnail styling to images with captions
+ * Use <figure> and <figcaption>
+ *
+ * @link http://justintadlock.com/archives/2011/07/01/captions-in-wordpress
+ */
+function roots_caption($output, $attr, $content) {
+  if (is_feed()) {
+    return $output;
+}	
+
+  $defaults = array(
+    'id' => '',
+    'align' => 'alignnone',
+    'width' => '',
+    'caption' => ''
+  );
+
+  $attr = shortcode_atts($defaults, $attr);
+
+  // If the width is less than 1 or there is no caption, return the content wrapped between the [caption] tags
+  if (1 > $attr['width'] || empty($attr['caption'])) {
+    return $content;
 	}
-  }
 
-  $lang = get_bloginfo('language');
+  // Set up the attributes for the caption <figure>
+  $attributes  = (!empty($attr['id']) ? ' id="' . esc_attr($attr['id']) . '"' : '' );
+  $attributes .= ' class="thumbnail wp-caption ' . esc_attr($attr['align']) . '"';
+  $attributes .= ' style="width: ' . esc_attr($attr['width']) . 'px"';
 
-  if ($lang && $lang !== 'en-US') {
-	$attributes[] = "lang=\"$lang\"";
-  } else {
-	$attributes[] = 'lang="en"';
-  }
-
-  $output = implode(' ', $attributes);
-  $output = apply_filters('roots_language_attributes', $output);
+  $output  = '<figure' . $attributes .'>';
+  $output .= do_shortcode($content);
+  $output .= '<figcaption class="caption wp-caption-text">' . $attr['caption'] . '</figcaption>';
+  $output .= '</figure>';
 
   return $output;
 }
 
-add_filter('language_attributes', 'roots_language_attributes');
-
-/**
- * Remove the WordPress version from RSS feeds
- */
-function roots_remove_generator() { return; }
-
-add_filter('the_generator', 'roots_remove_generator');
-
-/**
- * Cleanup wp_head()
- *
- * Remove unnecessary <link>'s
- * Remove inline CSS used by Recent Comments widget
- * Remove inline CSS used by posts with galleries
- * Remove self-closing tag and change ''s to "'s on rel_canonical()
- */
-function roots_head_cleanup() {
-  // http://wpengineer.com/1438/wordpress-header/
-  remove_action('wp_head', 'feed_links', 2);
-  remove_action('wp_head', 'feed_links_extra', 3);
-  remove_action('wp_head', 'rsd_link');
-  remove_action('wp_head', 'wlwmanifest_link');
-  remove_action('wp_head', 'index_rel_link');
-  remove_action('wp_head', 'parent_post_rel_link', 10, 0);
-  remove_action('wp_head', 'start_post_rel_link', 10, 0);
-  remove_action('wp_head', 'adjacent_posts_rel_link_wp_head', 10, 0);
-  remove_action('wp_head', 'wp_generator');
-  remove_action('wp_head', 'wp_shortlink_wp_head', 10, 0);
-
-  add_action('wp_head', 'roots_remove_recent_comments_style', 1);
-  add_filter('gallery_style', 'roots_gallery_style');
-
-  if (!class_exists('WPSEO_Frontend')) {
-    remove_action('wp_head', 'rel_canonical');
-    add_action('wp_head', 'roots_rel_canonical');
-	}
-}	
-
-function roots_rel_canonical() {
-  global $wp_the_query;
-
-	if (!is_singular()) {
-		return;
-	}
-
-	if (!$id = $wp_the_query->get_queried_object_id()) {
-		return;
-	}
-
-	$link = get_permalink($id);
-	echo "\t<link rel=\"canonical\" href=\"$link\">\n";
-}
-
-function roots_remove_recent_comments_style() {
-	global $wp_widget_factory;
-
-	if (isset($wp_widget_factory->widgets['WP_Widget_Recent_Comments'])) {
-		remove_action('wp_head', array($wp_widget_factory->widgets['WP_Widget_Recent_Comments'], 'recent_comments_style'));
-	}
-}
-
-function roots_gallery_style($css) {
-	return preg_replace("!<style type='text/css'>(.*?)</style>!s", '', $css);
-}
-
-add_action('init', 'roots_head_cleanup');
+add_filter('img_caption_shortcode', 'roots_caption', 10, 3);
 
 /**
  * Cleanup gallery_shortcode()
@@ -228,7 +244,7 @@ add_action('init', 'roots_head_cleanup');
  *
  * @link http://twitter.github.com/bootstrap/components.html#thumbnails
  */
-function roots_gallery_shortcode($attr) {
+function roots_gallery($attr) {
 	global $post, $wp_locale;
 
 	static $instance = 0;
@@ -333,57 +349,7 @@ function roots_gallery_shortcode($attr) {
 }
 
 remove_shortcode('gallery');
-add_shortcode('gallery', 'roots_gallery_shortcode');
-
-/**
- * Add class="thumbnail" to attachment items
- */
-function roots_attachment_link_class($html) {
-  $postid = get_the_ID();
-  $html = str_replace('<a', '<a class="thumbnail"', $html);
-  return $html;
-}
-
-add_filter('wp_get_attachment_link', 'roots_attachment_link_class', 10, 1);
-
-/**
- * Add Bootstrap thumbnail styling to images with captions
- *
- * @link http://justintadlock.com/archives/2011/07/01/captions-in-wordpress
- */
-function roots_caption($output, $attr, $content) {
-  if ( is_feed()) {
-    return $output;
-  }
-
-  $defaults = array(
-    'id' => '',
-    'align' => 'alignnone',
-    'width' => '',
-    'caption' => ''
-  );
-
-  $attr = shortcode_atts($defaults, $attr);
-
-  // If the width is less than 1 or there is no caption, return the content wrapped between the [caption] tags
-  if (1 > $attr['width'] || empty($attr['caption'])) {
-    return $content;
-  }
-
-  // Set up the attributes for the caption <div>
-  $attributes = (!empty($attr['id']) ? ' id="' . esc_attr($attr['id']) . '"' : '' );
-  $attributes .= ' class="thumbnail wp-caption ' . esc_attr($attr['align']) . '"';
-  $attributes .= ' style="width: ' . esc_attr($attr['width']) . 'px"';
-
-  $output = '<div' . $attributes .'>';
-  $output .= do_shortcode($content);
-  $output .= '<div class="caption"><p class="wp-caption-text">' . $attr['caption'] . '</p></div>';
-  $output .= '</div>';
-
-  return $output;
-}
-
-add_filter('img_caption_shortcode', 'roots_caption', 10, 3);
+add_shortcode('gallery', 'roots_gallery');
 
 /**
  * Remove unnecessary dashboard widgets
@@ -417,16 +383,8 @@ add_filter('excerpt_more', 'roots_excerpt_more');
  * Replace various active menu class names with "active"
  */
 function roots_wp_nav_menu($text) {
-  $replace = array(
-    'current-menu-item'     => 'active',
-    'current-menu-parent'   => 'active',
-    'current-menu-ancestor' => 'active',
-    'current_page_item'     => 'active',
-    'current_page_parent'   => 'active',
-    'current_page_ancestor' => 'active',
-  );
-
-  $text = str_replace(array_keys($replace), $replace, $text);
+  $text = preg_replace('/(current(-menu-|[-_]page[-_])(item|parent|ancestor))/', 'active', $text);
+  $text = preg_replace('/( active){2,}/', ' active', $text);
   return $text;
 }
 
@@ -476,18 +434,6 @@ function roots_change_mce_options($options) {
 add_filter('tiny_mce_before_init', 'roots_change_mce_options');
 
 /**
- * Cleanup output of stylesheet <link> tags
- */
-add_filter('style_loader_tag', 'roots_clean_style_tag');
-
-function roots_clean_style_tag($input) {
-  preg_match_all("!<link rel='stylesheet'\s?(id='[^']+')?\s+href='(.*)' type='text/css' media='(.*)' />!", $input, $matches);
-  // Only display media if it's print
-  $media = $matches[3][0] === 'print' ? ' media="print"' : '';                                                                             
-  return '<link rel="stylesheet" href="' . $matches[2][0] . '"' . $media . '>' . "\n";
-}
-
-/**
  * Add additional classes onto widgets
  *
  * @link http://wordpress.org/support/topic/how-to-first-and-last-css-classes-for-sidebar-widgets
@@ -523,7 +469,51 @@ function roots_widget_first_last_classes($params) {
   $params[0]['before_widget'] = preg_replace('/class=\"/', "$class", $params[0]['before_widget'], 1);
 
   return $params;
-
 }
 
 add_filter('dynamic_sidebar_params', 'roots_widget_first_last_classes');
+
+/**
+ * Redirects search results from /?s=query to /search/query/, converts %20 to +
+ *
+ * @link http://txfx.net/wordpress-plugins/nice-search/
+ */
+function roots_nice_search_redirect() {
+  if (is_search() && strpos($_SERVER['REQUEST_URI'], '/wp-admin/') === false && strpos($_SERVER['REQUEST_URI'], '/search/') === false) {
+    wp_redirect(home_url('/search/' . str_replace(array(' ', '%20'), array('+', '+'), urlencode(get_query_var('s')))), 301);
+    exit();
+  }
+}
+
+add_action('template_redirect', 'roots_nice_search_redirect');
+
+/**
+ * Fix for get_search_query() returning +'s between search terms
+ */
+function roots_search_query($escaped = true) {
+  $query = apply_filters('roots_search_query', get_query_var('s'));
+
+  if ($escaped) {
+    $query = esc_attr($query);
+  }
+
+  return urldecode($query);
+}
+
+add_filter('get_search_query', 'roots_search_query');
+
+/**
+ * Fix for empty search queries redirecting to home page
+ *
+ * @link http://wordpress.org/support/topic/blank-search-sends-you-to-the-homepage#post-1772565
+ * @link http://core.trac.wordpress.org/ticket/11330
+ */
+function roots_request_filter($query_vars) {
+  if (isset($_GET['s']) && empty($_GET['s'])) {
+    $query_vars['s'] = ' ';
+  }
+
+  return $query_vars;
+}
+
+add_filter('request', 'roots_request_filter');

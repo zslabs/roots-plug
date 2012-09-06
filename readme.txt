@@ -3,14 +3,14 @@ Contributors: zslabs
 Tags: roots, cleanup
 Requires at least: 3.3
 Tested up to: 3.3.2
-Stable tag: 0.6
+Stable tag: 0.7
 License: GPLv2
 
-Catch-all awesomeness for a leaner, meaner WordPress site. Based off of the Roots Theme by Ben Word.
+Catch-all awesomeness for a leaner, meaner WordPress site.
 
 == Description ==
 
-Roots Plug is the catch-all awesome WordPress plugin that cleans up default output, uses relative URLs and provides all those handy-dandy functions that we all search for around the web - in one convenient package! Largely (and I mean largely) based and inspired by the [Roots Theme](http://rootstheme.com) by [Ben Word](http://benword.com).
+Roots Plug is the catch-all awesome WordPress plugin that cleans up default output, uses relative URLs and provides all those handy-dandy functions that we all search for around the web - in one convenient package! Based and inspired by the [Roots Theme](http://rootstheme.com) by Ben Word.
 
 Please see the [Roots Wiki](https://github.com/retlehs/roots/wiki/Roots-functions) for a summary of what most of this plugin has included in it. This plugin does incude `.htaccess` additions/rewrites - which may sound scary, but are pretty freakin awesome!
 
@@ -30,9 +30,12 @@ Please see the [Roots Wiki](https://github.com/retlehs/roots/wiki/Roots-function
 
 = Can you add `feature-x`? =
 
-Sure! I'm always open to knew ideas. Just create a new forum post and I'll take a gander.
+Sure! I'm always open to knew ideas. Just create a new [issue](https://github.com/zslabs/roots-plug/issues) and I'll take a gander.
 
 == Changelog ==
+
+= 0.7 =
+* Cleanup and htaccess updates
 
 = 0.6 =
 * .htaccess updates
