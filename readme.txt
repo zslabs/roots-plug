@@ -1,25 +1,19 @@
 === Roots Plug ===
 Contributors: zslabs
-Tags: roots, cleanup
-Requires at least: 3.3
-Tested up to: 3.3.2
-Stable tag: 0.7
+Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=EEMPDX7SN4RFW
+Tags: roots, cleanup, htaccess, relative urls
+Requires at least: 3.5
+Tested up to: 3.5
+Stable tag: 1.0.0
 License: GPLv2
 
 Catch-all awesomeness for a leaner, meaner WordPress site.
 
 == Description ==
 
-Roots Plug is the catch-all awesome WordPress plugin that cleans up default output, uses relative URLs and provides all those handy-dandy functions that we all search for around the web - in one convenient package! Based and inspired by the [Roots Theme](http://rootstheme.com) by Ben Word.
+Roots Plug is the catch-all awesome WordPress plugin that cleans up default output and provides all those handy-dandy functions that we all search for around the web - in one convenient package! It also appends on [HTML5 Boilerplate's](http://html5boilerplate.com/) `.htaccess` rewrites automagically.
 
-Please see the [Roots Wiki](https://github.com/retlehs/roots/wiki/Roots-functions) for a summary of what most of this plugin has included in it. This plugin does incude `.htaccess` additions/rewrites - which may sound scary, but are pretty freakin awesome!
-
-    The .htaccess rewrites assume your theme has the following structure:
-    /css for CSS
-    /img for Images
-    /js for Javascripts
-
-    You may need to adjust your theme if you run into any issues with that
+**Roots Plug was recently rewritten from scratch. While most of the base functionality remained intact, gone are the asset rewrites. Why? Because they forced you to change how your template files were stored and broke several other plugins - which isn't cool. Upcoming releases will continue to make this more compatible across different WordPress environments. 3.5 is a requirement now.**
 
 == Installation ==
 
@@ -33,6 +27,9 @@ Please see the [Roots Wiki](https://github.com/retlehs/roots/wiki/Roots-function
 Sure! I'm always open to knew ideas. Just create a new [issue](https://github.com/zslabs/roots-plug/issues) and I'll take a gander.
 
 == Changelog ==
+
+= 1.0.0 =
+* Complete rewrite (removed asset rewrites, but more compatible across different setups)
 
 = 0.7 =
 * Cleanup and htaccess updates
@@ -55,3 +52,8 @@ Sure! I'm always open to knew ideas. Just create a new [issue](https://github.co
 
 = 0.1 =
 * Initial release
+
+== Upgrade Notice ==
+
+= 1.0.0 =
+Roots Plug no longer forces you to keep your assets in a specific directory in your theme (so update accordingly if need-be). You may need to re-save your permalinks to add-in the updated `.htaccess` additions.
