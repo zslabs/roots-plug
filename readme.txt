@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: roots, cleanup, htaccess, relative urls
 Requires at least: 3.5
 Tested up to: 3.5
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2
 
 Catch-all awesomeness for a leaner, meaner WordPress site.
@@ -27,6 +27,9 @@ Roots Plug is the catch-all awesome WordPress plugin that cleans up default outp
 Sure! I'm always open to knew ideas. Just create a new [issue](https://github.com/zslabs/roots-plug/issues) and I'll take a gander.
 
 == Changelog ==
+
+= 1.0.1 =
+* Quick-fix for push error
 
 = 1.0.0 =
 * Complete rewrite (removed asset rewrites, but more compatible across different setups)
