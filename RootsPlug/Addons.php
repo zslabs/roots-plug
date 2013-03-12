@@ -26,6 +26,7 @@ class RootsPlug_Addons {
 
 		add_action( 'check_comment_flood', array( $this, 'verify_comment_referer' ) );
 		add_filter( 'wp_nav_menu_items', array( $this, 'first_last_class_menu' ) );
+		add_action( 'admin_menu', array( $this, 'all_settings_link' ) );
 
 		/**
 		 * Allow widgets to parse shortcodes
@@ -70,10 +71,26 @@ class RootsPlug_Addons {
 	 */
 	public function verify_comment_referer() {
 
-		if (!wp_get_referer()) {
-		    wp_die( __('You cannot post comment at this time, may be you need to enable referrers in your browser.','roots') );
+		if ( !wp_get_referer() ) {
+
+			wp_die( __('You cannot post comment at this time, may be you need to enable referrers in your browser.','rootsplug') );
 		}
 
+	}
+
+	/**
+	 * Adds link to Settings panel for easy access to the main options page (normally hidden)
+	 * http://wordpress.stackexchange.com/a/1614/9605
+	 * @return void
+	 *
+	 * @since 1.1.0
+	 */
+	public function all_settings_link() {
+
+		if ( is_admin() && current_user_can( 'manage_options' ) && !is_multisite() ) {
+
+			add_options_page( __( 'All Settings', 'rootsplug' ), __( 'All Settings', 'rootsplug' ), 'administrator', 'options.php' );
+		}
 	}
 
 

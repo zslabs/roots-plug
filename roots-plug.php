@@ -3,7 +3,7 @@
 Plugin Name: Roots Plug
 Plugin URI: http://zslabs.com
 Description: Base plugin
-Version: 1.0.1
+Version: 1.1.0
 Author: Zach Schnackel
 Author URI: http://zslabs.com
 License: GNU General Public License v2.0 or later

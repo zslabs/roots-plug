@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: roots, cleanup, htaccess, relative urls
 Requires at least: 3.5
 Tested up to: 3.5
-Stable tag: 1.0.1
+Stable tag: 1.1.0
 License: GPLv2
 
 Catch-all awesomeness for a leaner, meaner WordPress site.
@@ -12,6 +12,8 @@ Catch-all awesomeness for a leaner, meaner WordPress site.
 == Description ==
 
 Roots Plug is the catch-all awesome WordPress plugin that cleans up default output and provides all those handy-dandy functions that we all search for around the web - in one convenient package! It also appends on [HTML5 Boilerplate's](http://html5boilerplate.com/) `.htaccess` rewrites automagically.
+
+Inspired by [Roots Theme](http://rootstheme.com) by Ben Word -- extracted much of the cleanup efforts into a handy-dany plugin.
 
 **Roots Plug was recently rewritten from scratch. While most of the base functionality remained intact, gone are the asset rewrites. Why? Because they forced you to change how your template files were stored and broke several other plugins - which isn't cool. Upcoming releases will continue to make this more compatible across different WordPress environments. 3.5 is a requirement now.**
 
@@ -27,6 +29,10 @@ Roots Plug is the catch-all awesome WordPress plugin that cleans up default outp
 Sure! I'm always open to knew ideas. Just create a new [issue](https://github.com/zslabs/roots-plug/issues) and I'll take a gander.
 
 == Changelog ==
+
+= 1.1.0 =
+* Source credits given
+* 'Options' link added (for easy access to `options.php`) in Settings Panel
 
 = 1.0.1 =
 * Quick-fix for push error
