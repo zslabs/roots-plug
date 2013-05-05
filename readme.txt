@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: roots, cleanup, htaccess, relative urls
 Requires at least: 3.5
 Tested up to: 3.5
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2
 
 Catch-all awesomeness for a leaner, meaner WordPress site.
@@ -30,7 +30,10 @@ Sure! I'm always open to knew ideas. Just create a new [issue](https://github.co
 
 == Changelog ==
 
-= 1.2.0
+= 1.2.1 =
+* Readme typo fix
+
+= 1.2.0 =
 * Updated `.htaccess` file from [Roots repo](https://github.com/retlehs/wp-h5bp-htaccess)
 * Updated [relative URL cleanup](https://github.com/retlehs/roots/commit/a8c543753ae4f2e9b39a9ece4f023d54f95c6588)
 
