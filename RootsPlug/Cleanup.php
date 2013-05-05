@@ -21,10 +21,6 @@ class RootsPlug_Cleanup {
 	 */
 	private $root_rel_filters = array(
 		'bloginfo_url',
-		'theme_root_uri',
-		'stylesheet_directory_uri',
-		'template_directory_uri',
-		'plugins_url',
 		'the_permalink',
 		'wp_list_pages',
 		'wp_list_categories',
@@ -64,9 +60,9 @@ class RootsPlug_Cleanup {
 		add_filter( 'dynamic_sidebar_params', array( $this, 'widget_first_last_classes' ) );
 		add_filter( 'template_redirect', array( $this, 'search_redirect' ) );
 
-		if ( !( is_admin() || in_array( $GLOBALS['pagenow'], array('wp-login.php', 'wp-register.php' ) ) ) ) {
+		if ( !( is_admin() || in_array( $GLOBALS['pagenow'], array( 'wp-login.php', 'wp-register.php' ) ) ) ) {
 
-			$this->add_filters($this->root_rel_filters, array( $this, 'root_relative_url' ) );
+			$this->add_filters( $this->root_rel_filters, array( $this, 'root_relative_url' ) );
 		}
 
 		/**
@@ -78,23 +74,23 @@ class RootsPlug_Cleanup {
 		 * Remove self-closing tag and change ''s to "'s on rel_canonical()
 		 * Originally from http://wpengineer.com/1438/wordpress-header/
 		 */
-		//remove_action('wp_head', 'feed_links', 2);
-		remove_action('wp_head', 'feed_links_extra', 3);
-		remove_action('wp_head', 'rsd_link');
-		remove_action('wp_head', 'wlwmanifest_link');
-		remove_action('wp_head', 'adjacent_posts_rel_link_wp_head', 10, 0);
-		remove_action('wp_head', 'wp_generator');
-		remove_action('wp_head', 'wp_shortlink_wp_head', 10, 0);
+		//remove_action( 'wp_head', 'feed_links', 2);
+		remove_action( 'wp_head', 'feed_links_extra', 3 );
+		remove_action( 'wp_head', 'rsd_link' );
+		remove_action( 'wp_head', 'wlwmanifest_link' );
+		remove_action( 'wp_head', 'adjacent_posts_rel_link_wp_head', 10, 0 );
+		remove_action( 'wp_head', 'wp_generator' );
+		remove_action( 'wp_head', 'wp_shortlink_wp_head', 10, 0 );
 
 		global $wp_widget_factory;
-		remove_action('wp_head', array($wp_widget_factory->widgets['WP_Widget_Recent_Comments'], 'recent_comments_style'));
+		remove_action( 'wp_head', array( $wp_widget_factory->widgets['WP_Widget_Recent_Comments'], 'recent_comments_style' ) );
 
-		add_filter('use_default_gallery_style', '__return_null');
+		add_filter( 'use_default_gallery_style', '__return_null' );
 
 		/**
 		 * Remove the WordPress version from RSS feeds
 		 */
-		add_filter('the_generator', '__return_false');
+		add_filter( 'the_generator', '__return_false' );
 
 
 	}
@@ -108,7 +104,7 @@ class RootsPlug_Cleanup {
 	 */
 	public function clean_style_tag( $input ) {
 
-		preg_match_all( "!<link rel='stylesheet'\s?(id='[^']+')?\s+href='(.*)' type='text/css' media='(.*)' />!", $input, $matches );
+		preg_match_all( "!<link rel='stylesheet'\s?(id='[^']+' )?\s+href='(.*)' type='text/css' media='(.*)' />!", $input, $matches );
 		// Only display media if it's print
 		$media = $matches[3][0] === 'print' ? ' media="print"' : '';
 		return '<link rel="stylesheet" href="' . $matches[2][0] . '"' . $media . '>' . "\n";
@@ -128,21 +124,21 @@ class RootsPlug_Cleanup {
 		$attributes = array();
 		$output = '';
 
-		if (function_exists('is_rtl')) {
-			if (is_rtl() == 'rtl') {
+		if (function_exists( 'is_rtl' ) ) {
+			if (is_rtl() == 'rtl' ) {
 				$attributes[] = 'dir="rtl"';
 			}
 		}
 
-		$lang = get_bloginfo('language');
+		$lang = get_bloginfo( 'language' );
 
-		if ($lang && $lang !== 'en-US') {
+		if ($lang && $lang !== 'en-US' ) {
 			$attributes[] = "lang=\"$lang\"";
 		} else {
 			$attributes[] = 'lang="en"';
 		}
 
-		$output = implode(' ', $attributes);
+		$output = implode( ' ', $attributes);
 		$output = apply_filters( __METHOD__, $output);
 
 		return $output;
@@ -155,38 +151,15 @@ class RootsPlug_Cleanup {
 	 * Inspired by http://www.456bereastreet.com/archive/201010/how_to_make_wordpress_urls_root_relative/
 	 *
 	 * You can enable/disable this feature in config.php:
-	 * current_theme_supports('root-relative-urls');
+	 * current_theme_supports( 'root-relative-urls' );
 	 *
 	 * @author Scott Walkinshaw <scott.walkinshaw@gmail.com>
 	 *
 	 * @since 1.0.0.0
 	 */
 	public function root_relative_url( $input ) {
-		// fix for site_url != home_url()
-		if( !is_admin() && site_url() != home_url() && stristr($input, 'wp-includes') === false ) {
-			$input = str_replace(site_url(), "", $input);
-		}
 
-		$output = preg_replace_callback(
-			'!(https?://[^/|"]+)([^"]+)?!',
-			create_function(
-				'$matches',
-				// If full URL is home_url("/") and this isn't a subdir install, return a slash for relative root
-				'if (isset($matches[0]) && $matches[0] === home_url("/") && str_replace("http://", "", home_url("/", "http"))==$_SERVER["HTTP_HOST"]) { return "/";' .
-				// If domain is equal to home_url("/"), then make URL relative
-				'} elseif (isset($matches[0]) && strpos($matches[0], home_url("/")) !== false) { return $matches[2];' .
-				// If domain is not equal to home_url("/"), do not make external link relative
-				'} else { return $matches[0]; };'
-			),
-			$input
-		);
-
-		// detect and correct for subdir installs
-		if( $subdir = parse_url( home_url(), PHP_URL_PATH ) ) {
-			if( substr($output, 0, strlen( $subdir ) ) == ( substr( $output, strlen( $subdir ), strlen( $subdir ) ) ) ) {
-				$output = substr( $output, strlen( $subdir ) );
-			}
-		}
+		$output = wp_make_link_relative($input);
 
 		return $output;
 	}
@@ -201,17 +174,17 @@ class RootsPlug_Cleanup {
 	public function body_class( $classes ) {
 
 		// Add post/page slug
-		if (is_single() || is_page() && !is_front_page()) {
-			$classes[] = basename(get_permalink());
+		if ( is_single() || is_page() && !is_front_page() ) {
+			$classes[] = basename(get_permalink() );
 		}
 
 		// Remove unnecessary classes
-		$home_id_class = 'page-id-' . get_option('page_on_front');
+		$home_id_class = 'page-id-' . get_option( 'page_on_front' );
 		$remove_classes = array(
 			'page-template-default',
 			$home_id_class
 		);
-		$classes = array_diff($classes, $remove_classes);
+		$classes = array_diff( $classes, $remove_classes );
 
 		return $classes;
 	}
@@ -224,10 +197,10 @@ class RootsPlug_Cleanup {
 	 */
 	public function remove_dashboard_widgets() {
 
-		remove_meta_box('dashboard_incoming_links', 'dashboard', 'normal');
-		remove_meta_box('dashboard_plugins', 'dashboard', 'normal');
-		remove_meta_box('dashboard_primary', 'dashboard', 'normal');
-		remove_meta_box('dashboard_secondary', 'dashboard', 'normal');
+		remove_meta_box( 'dashboard_incoming_links', 'dashboard', 'normal' );
+		remove_meta_box( 'dashboard_plugins', 'dashboard', 'normal' );
+		remove_meta_box( 'dashboard_primary', 'dashboard', 'normal' );
+		remove_meta_box( 'dashboard_secondary', 'dashboard', 'normal' );
 
 	}
 
@@ -240,7 +213,7 @@ class RootsPlug_Cleanup {
 	 */
 	public function remove_self_closing_tags( $input ) {
 
-		return str_replace(' />', '>', $input);
+		return str_replace( ' />', '>', $input);
 
 	}
 
@@ -267,7 +240,7 @@ class RootsPlug_Cleanup {
 	public function remove_default_rss_description( $bloginfo ) {
 
 		$default_tagline = 'Just another WordPress site';
-		return ($bloginfo === $default_tagline) ? '' : $bloginfo;
+		return ( $bloginfo === $default_tagline ) ? '' : $bloginfo;
 
 	}
 
@@ -289,11 +262,11 @@ class RootsPlug_Cleanup {
 			$my_widget_num = array();
 		}
 
-		if (!isset($arr_registered_widgets[$this_id]) || !is_array($arr_registered_widgets[$this_id])) {
+		if (!isset($arr_registered_widgets[$this_id]) || !is_array($arr_registered_widgets[$this_id]) ) {
 			return $params;
 		}
 
-		if (isset($my_widget_num[$this_id])) {
+		if (isset($my_widget_num[$this_id]) ) {
 			$my_widget_num[$this_id] ++;
 		} else {
 			$my_widget_num[$this_id] = 1;
@@ -303,11 +276,11 @@ class RootsPlug_Cleanup {
 
 		if ($my_widget_num[$this_id] == 1) {
 			$class .= 'widget-first ';
-		} elseif ($my_widget_num[$this_id] == count($arr_registered_widgets[$this_id])) {
+		} elseif ($my_widget_num[$this_id] == count($arr_registered_widgets[$this_id]) ) {
 			$class .= 'widget-last ';
 		}
 
-		$params[0]['before_widget'] = preg_replace('/class=\"/', "$class", $params[0]['before_widget'], 1);
+		$params[0]['before_widget'] = preg_replace( '/class=\"/', "$class", $params[0]['before_widget'], 1);
 
 		return $params;
 
@@ -322,13 +295,13 @@ class RootsPlug_Cleanup {
 	public function search_redirect() {
 
 		global $wp_rewrite;
-		if (!isset($wp_rewrite) || !is_object($wp_rewrite) || !$wp_rewrite->using_permalinks()) {
+		if (!isset($wp_rewrite) || !is_object($wp_rewrite) || !$wp_rewrite->using_permalinks() ) {
 			return;
 		}
 
 		$search_base = $wp_rewrite->search_base;
-		if (is_search() && !is_admin() && strpos($_SERVER['REQUEST_URI'], "/{$search_base}/") === false) {
-			wp_redirect(home_url("/{$search_base}/" . urlencode(get_query_var('s'))));
+		if ( is_search() && !is_admin() && strpos( $_SERVER['REQUEST_URI'], "/{$search_base}/" ) === false ) {
+			wp_redirect( home_url( "/{$search_base}/" . urlencode( get_query_var( 's' ) ) ) );
 			exit();
 		}
 
@@ -343,8 +316,8 @@ class RootsPlug_Cleanup {
 	 */
 	private function add_filters( $tags, $function ) {
 
-		foreach($tags as $tag) {
-			add_filter($tag, $function);
+		foreach( $tags as $tag ) {
+			add_filter( $tag, $function );
 		}
 	}
 
