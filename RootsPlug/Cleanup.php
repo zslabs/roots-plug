@@ -59,6 +59,7 @@ class RootsPlug_Cleanup {
 		add_filter( 'get_bloginfo_rss', array( $this, 'remove_default_rss_description' ) );
 		add_filter( 'dynamic_sidebar_params', array( $this, 'widget_first_last_classes' ) );
 		add_filter( 'template_redirect', array( $this, 'search_redirect' ) );
+		add_filter( 'img_caption_shortcode', array( $this, 'image_caption_cleanup' ), 10, 3 );
 
 		if ( !( is_admin() || in_array( $GLOBALS['pagenow'], array( 'wp-login.php', 'wp-register.php' ) ) ) ) {
 
@@ -104,7 +105,7 @@ class RootsPlug_Cleanup {
 	 */
 	public function clean_style_tag( $input ) {
 
-		preg_match_all( "!<link rel='stylesheet'\s?(id='[^']+' )?\s+href='(.*)' type='text/css' media='(.*)' />!", $input, $matches );
+		preg_match_all( "!<link rel='stylesheet'\s?(id='[^']+')?\s+href='(.*)' type='text/css' media='(.*)' />!", $input, $matches );
 		// Only display media if it's print
 		$media = $matches[3][0] === 'print' ? ' media="print"' : '';
 		return '<link rel="stylesheet" href="' . $matches[2][0] . '"' . $media . '>' . "\n";
@@ -159,9 +160,13 @@ class RootsPlug_Cleanup {
 	 */
 	public function root_relative_url( $input ) {
 
-		$output = wp_make_link_relative($input);
+		preg_match( '|https?://([^/]+)(/.*)|i', $input, $matches );
 
-		return $output;
+		if ( isset( $matches[1] ) && isset($matches[2] ) && $matches[1] === $_SERVER['SERVER_NAME'] ) {
+			return wp_make_link_relative( $input );
+		} else {
+			return $input;
+		}
 	}
 
 	/**
@@ -305,6 +310,43 @@ class RootsPlug_Cleanup {
 			exit();
 		}
 
+	}
+
+	/**
+	 * Cleanup image caption shortocde to not include width in output
+	 * @return void
+	 *
+	 * @since  1.2.2
+	 */
+	public function image_caption_cleanup( $output, $attr, $content ) {
+		if (is_feed()) {
+			return $output;
+		}
+
+		$defaults = array(
+			'id'      => '',
+			'align'   => 'alignnone',
+			'width'   => '',
+			'caption' => ''
+		);
+
+		$attr = shortcode_atts($defaults, $attr);
+
+		// If the width is less than 1 or there is no caption, return the content wrapped between the [caption] tags
+		if (1 > $attr['width'] || empty($attr['caption'])) {
+			return $content;
+		}
+
+		// Set up the attributes for the caption <figure>
+		$attributes  = (!empty($attr['id']) ? ' id="' . esc_attr($attr['id']) . '"' : '' );
+		$attributes .= ' class="thumbnail wp-caption ' . esc_attr($attr['align']) . '"';
+
+		$output  = '<figure' . $attributes .'>';
+		$output .= do_shortcode($content);
+		$output .= '<figcaption class="caption wp-caption-text">' . $attr['caption'] . '</figcaption>';
+		$output .= '</figure>';
+
+		return $output;
 	}
 
 	/**
