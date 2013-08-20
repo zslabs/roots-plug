@@ -59,6 +59,7 @@ class RootsPlug_Cleanup {
 		add_filter( 'get_bloginfo_rss', array( $this, 'remove_default_rss_description' ) );
 		add_filter( 'dynamic_sidebar_params', array( $this, 'widget_first_last_classes' ) );
 		add_filter( 'template_redirect', array( $this, 'search_redirect' ) );
+		add_filter( 'request', array( $this, 'request_filter' ) );
 		add_filter( 'img_caption_shortcode', array( $this, 'image_caption_cleanup' ), 10, 3 );
 
 		if ( !( is_admin() || in_array( $GLOBALS['pagenow'], array( 'wp-login.php', 'wp-register.php' ) ) ) ) {
@@ -105,9 +106,9 @@ class RootsPlug_Cleanup {
 	 */
 	public function clean_style_tag( $input ) {
 
-		preg_match_all( "!<link rel='stylesheet'\s?(id='[^']+')?\s+href='(.*)' type='text/css' media='(.*)' />!", $input, $matches );
-		// Only display media if it's print
-		$media = $matches[3][0] === 'print' ? ' media="print"' : '';
+		preg_match_all("!<link rel='stylesheet'\s?(id='[^']+')?\s+href='(.*)' type='text/css' media='(.*)' />!", $input, $matches);
+		// Only display media if it is meaningful
+		$media = $matches[3][0] !== '' && $matches[3][0] !== 'all' ? ' media="' . $matches[3][0] . '"' : '';
 		return '<link rel="stylesheet" href="' . $matches[2][0] . '"' . $media . '>' . "\n";
 
 	}
@@ -310,6 +311,23 @@ class RootsPlug_Cleanup {
 			exit();
 		}
 
+	}
+
+	/**
+	 * Fix for empty search queries redirecting to home page
+	 *
+	 * @link http://wordpress.org/support/topic/blank-search-sends-you-to-the-homepage#post-1772565
+	 * @link http://core.trac.wordpress.org/ticket/11330
+	 *
+	 * @since  1.2.3
+	 */
+	public function request_filter( $query_vars ) {
+
+		if (isset($_GET['s']) && empty($_GET['s'])) {
+			$query_vars['s'] = ' ';
+		}
+
+		return $query_vars;
 	}
 
 	/**

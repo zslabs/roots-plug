@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: roots, cleanup, htaccess, relative urls
 Requires at least: 3.5
 Tested up to: 3.5
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 License: GPLv2
 
 Catch-all awesomeness for a leaner, meaner WordPress site.
@@ -29,6 +29,10 @@ Inspired by [Roots Theme](http://rootstheme.com) by Ben Word -- extracted much o
 Sure! I'm always open to knew ideas. Just create a new [issue](https://github.com/zslabs/roots-plug/issues) and I'll take a gander.
 
 == Changelog ==
+
+= 1.2.3 =
+* Fix for empty search queries redirecting to home page
+* Tested in WP 3.6
 
 = 1.2.2 =
 * Updated relative URL function (for external URLs)
